@@ -17,7 +17,7 @@ def initialize_autocad():
         logging.info("Conexão com AutoCAD estabelecida.")
         return acad
     except Exception as e:
-        logging.error(f"Falha na inicialização: {e}")
+        logging.error(f"Falha na inicialização: {e}", exc_info=True)
         return None
 
 def select_survey_and_reference_data(acad):
@@ -27,14 +27,13 @@ def select_survey_and_reference_data(acad):
         logging.info("Selecione manualmente os COGO POINTS do levantamento")
         survey_set = None
         
-        # Verificar se o conjunto de seleção já existe
+        # Verificar/Criar conjunto de seleção
         for i in range(acad.ActiveDocument.SelectionSets.Count):
             if acad.ActiveDocument.SelectionSets.Item(i).Name == "SURVEY_SET":
                 survey_set = acad.ActiveDocument.SelectionSets.Item(i)
                 break
 
-        # Criar novo conjunto se necessário
-        if survey_set is None:
+        if not survey_set:
             survey_set = acad.ActiveDocument.SelectionSets.Add("SURVEY_SET")
         else:
             survey_set.Clear()
@@ -51,23 +50,21 @@ def select_survey_and_reference_data(acad):
                     'Description': entity.RawDescription
                 })
         
-        # Segunda seleção: Polilinhas e Textos (dados originais)
+        # Segunda seleção: Polilinhas e Textos
         logging.info("Agora selecione POLILINHAS e TEXTOS de referência")
         ref_set = None
         
-        # Verificar se o conjunto de seleção já existe
+        # Verificar/Criar conjunto de seleção
         for i in range(acad.ActiveDocument.SelectionSets.Count):
             if acad.ActiveDocument.SelectionSets.Item(i).Name == "REF_SET":
                 ref_set = acad.ActiveDocument.SelectionSets.Item(i)
                 break
 
-        # Criar novo conjunto se necessário
-        if ref_set is None:
+        if not ref_set:
             ref_set = acad.ActiveDocument.SelectionSets.Add("REF_SET")
         else:
             ref_set.Clear()
 
-        logging.info("Selecione manualmente polilinhas e textos de referência")
         ref_set.SelectOnScreen()
         
         polylines, text_entities = [], []
@@ -84,76 +81,103 @@ def select_survey_and_reference_data(acad):
         return cogo_points, polylines, text_entities
         
     except Exception as e:
-        logging.error(f"Erro na extração de dados: {e}")
+        logging.error(f"Erro na extração de dados: {e}", exc_info=True)
         return [], [], []
 
 def map_points(cogo_points, polylines, text_entities):
     """Mapeia pontos reais para ideais usando textos como referência."""
     vertex_labels = {}
-    ideal_points = []
     
     try:
-        # Extrai vértices da primeira polilinha
-        if polylines:
-            ideal_poly = polylines[0]['Vertices']
-            for i, vertex in enumerate(ideal_poly):
-                vertex_labels[f"V{i+1}"] = (vertex.x, vertex.y)
+        if not polylines:
+            raise ValueError("Nenhuma polilinha de referência selecionada")
+            
+        if not text_entities:
+            logging.warning("Nenhum texto de referência encontrado - usando vértices brutos")
+
+        # Extrair e rotular vértices
+        for poly_idx, poly in enumerate(polylines):
+            vertices = poly['Vertices']
+            for vert_idx, vertex in enumerate(vertices):
+                label = f"V{poly_idx+1}-{vert_idx+1}"
+                vertex_labels[label] = (vertex.x, vertex.y)
+
+        # Associar textos aos vértices mais próximos
+        if text_entities:
+            for text in text_entities:
+                text_pos = text['Position']
+                closest = min(
+                    vertex_labels.items(),
+                    key=lambda item: text_pos.distance_to(APoint(item[1][0], item[1][1])),
+                    default=None
+                )
+                
+                if closest and text_pos.distance_to(APoint(closest[1][0], closest[1][1])) < 5.0:
+                    vertex_labels[closest[0]] = (text_pos.x, text_pos.y)
+                    logging.info(f"Texto '{text['Content']}' associado ao vértice {closest[0]}")
+                else:
+                    logging.warning(f"Texto '{text['Content']}' não associado a nenhum vértice")
+
+        # Mapear pontos COGO
+        real_points, ideal_points = [], []
+        missing_labels = set()
         
-        # Associa textos aos vértices
-        for text in text_entities:
-            for label, coords in vertex_labels.items():
-                pt = APoint(coords[0], coords[1])
-                if text['Position'].distance_to(pt) < 1.0:
-                    vertex_labels[label] = (pt.x, pt.y)
-        
-        # Mapeia COGO points para vértices
-        real_points, ideal_points_mapped = [], []
         for cogo in cogo_points:
-            label = cogo['Description']
+            label = cogo['Description'].strip().upper()
+            if not label:
+                logging.error(f"COGO point {cogo['Number']} sem descrição")
+                continue
+                
             if label in vertex_labels:
                 real_points.append([cogo['X'], cogo['Y']])
-                ideal_points_mapped.append(vertex_labels[label])
+                ideal_points.append(vertex_labels[label])
+            else:
+                missing_labels.add(label)
+                logging.error(f"Descrição '{label}' não encontrada para COGO point {cogo['Number']}")
+
+        if not real_points:
+            raise ValueError("Nenhum ponto válido mapeado")
+            
+        logging.info(f"Pontos mapeados: {len(real_points)}")
+        logging.info(f"Descrições faltantes: {', '.join(missing_labels) if missing_labels else 'Nenhuma'}")
         
-        return np.array(real_points), np.array(ideal_points_mapped)
+        return np.array(real_points), np.array(ideal_points)
         
     except Exception as e:
-        logging.error(f"Erro no mapeamento: {e}")
+        logging.error(f"Erro no mapeamento: {str(e)}", exc_info=True)
         return np.array([]), np.array([])
 
 def kabsch_transform(real_points, ideal_points):
     """Calcula transformação rígida usando algoritmo de Kabsch."""
     try:
+        if real_points.size == 0 or ideal_points.size == 0:
+            raise ValueError("Pontos de entrada vazios para cálculo da transformação")
+            
         centroid_real = np.mean(real_points, axis=0)
         centroid_ideal = np.mean(ideal_points, axis=0)
         
-        # Centralização dos pontos
-        real_centered = real_points - centroid_real
-        ideal_centered = ideal_points - centroid_ideal
-        
-        # Cálculo da matriz de covariância
-        H = ideal_centered.T @ real_centered
-        
-        # Decomposição SVD
+        H = (ideal_points - centroid_ideal).T @ (real_points - centroid_real)
         U, _, Vt = np.linalg.svd(H)
         R = U @ Vt
         
-        # Garante orientação correta
         if np.linalg.det(R) < 0:
             Vt[-1, :] *= -1
             R = U @ Vt
             
-        # Calcula translação
         t = centroid_ideal - R @ centroid_real
         
         return R, t
-        
     except Exception as e:
-        logging.error(f"Erro na transformação de Kabsch: {e}")
+        logging.error(f"Falha na transformação de Kabsch: {str(e)}", exc_info=True)
         return None, None
 
 def remove_outliers(real_points, ideal_points):
     """Remove outliers usando RANSAC."""
     try:
+        if real_points.size == 0 or ideal_points.size == 0:
+            logging.warning("Dados insuficientes para filtragem de outliers")
+            return real_points, ideal_points
+            
         model = RANSACRegressor(
             min_samples=2,
             residual_threshold=0.5,
@@ -162,28 +186,8 @@ def remove_outliers(real_points, ideal_points):
         model.fit(real_points, ideal_points)
         return real_points[model.inlier_mask_], ideal_points[model.inlier_mask_]
     except Exception as e:
-        logging.error(f"Erro na remoção de outliers: {e}")
+        logging.error(f"Erro na filtragem de outliers: {str(e)}", exc_info=True)
         return real_points, ideal_points
-
-def delete_selection_sets(acad):
-    """Remove os conjuntos de seleção criados."""
-    try:
-        for i in range(acad.ActiveDocument.SelectionSets.Count-1, -1, -1):
-            ss = acad.ActiveDocument.SelectionSets.Item(i)
-            if ss.Name in ["SURVEY_SET", "REF_SET"]:
-                ss.Delete()
-    except Exception as e:
-        logging.error(f"Erro ao limpar conjuntos de seleção: {e}")
-
-def draw_transformed_points(acad, real_points, R, t):
-    """Desenha pontos transformados no AutoCAD."""
-    try:
-        for point in real_points:
-            transformed = R @ point + t
-            acad.model.AddPoint(APoint(transformed[0], transformed[1]))
-        logging.info(f"{len(real_points)} pontos transformados desenhados.")
-    except Exception as e:
-        logging.error(f"Erro ao desenhar pontos: {e}")
 
 def main():
     """Fluxo principal de execução."""
@@ -192,34 +196,31 @@ def main():
         return
     
     try:
-        # Etapa 1: Extração de dados
         cogo_points, polylines, texts = select_survey_and_reference_data(acad)
-        if not cogo_points:
-            raise ValueError("Nenhum COGO point selecionado")
-            
-        # Etapa 2: Mapeamento de pontos
         real_points, ideal_points = map_points(cogo_points, polylines, texts)
+        
         if len(real_points) < 2:
             raise ValueError("Mínimo de 2 pontos requeridos para transformação")
             
-        # Etapa 3: Remoção de outliers
         real_clean, ideal_clean = remove_outliers(real_points, ideal_points)
-        
-        # Etapa 4: Transformação de Kabsch
         R, t = kabsch_transform(real_clean, ideal_clean)
-        if R is None:
-            return
+        
+        if R is not None:
+            for point in real_points:
+                transformed = R @ point + t
+                acad.model.AddPoint(APoint(transformed[0], transformed[1]))
+            logging.info(f"{len(real_points)} pontos transformados desenhados")
             
-        # Etapa 5: Visualização
-        draw_transformed_points(acad, real_points, R, t)
-        
-        logging.info("Processo concluído com sucesso!")
-        
     except Exception as e:
-        logging.error(f"Erro no processo principal: {e}")
+        logging.error(f"Erro no processo principal: {str(e)}", exc_info=True)
     finally:
-        # Etapa 6: Limpeza dos conjuntos de seleção
-        delete_selection_sets(acad)
+        try:
+            for i in range(acad.ActiveDocument.SelectionSets.Count-1, -1, -1):
+                ss = acad.ActiveDocument.SelectionSets.Item(i)
+                if ss.Name in ["SURVEY_SET", "REF_SET"]:
+                    ss.Delete()
+        except Exception as e:
+            logging.error(f"Erro na limpeza: {str(e)}", exc_info=True)
 
 if __name__ == "__main__":
     main()
