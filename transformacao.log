@@ -1,0 +1,52 @@
+2025-02-24 14:56:41,379 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 14:56:42,412 - ERROR - Erro na extração de dados: (-2147418111, 'A chamada foi rejeitada pelo chamado.', (None, None, None, 0, None))
+2025-02-24 14:56:42,421 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:10:37,227 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:10:37,239 - ERROR - Erro na extração de dados: (-2147352567, 'Exceção.', ('The named selection set exists', 'Autodesk Civil 3D 2024', 'C:\\Program Files\\Autodesk\\AutoCAD 2024\\HELP\\OLE_ERR.CHM', -2145320851, None))
+2025-02-24 15:10:37,239 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:16:46,783 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:16:46,799 - INFO - Selecione os elementos no AutoCAD (COGO Points, Polilinhas e Textos)
+2025-02-24 15:17:00,453 - ERROR - Erro na extração de dados: Name GetCoordinates not found
+2025-02-24 15:17:00,454 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:17:27,666 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:17:27,680 - INFO - Selecione os elementos no AutoCAD (COGO Points, Polilinhas e Textos)
+2025-02-24 15:17:58,847 - ERROR - Erro na extração de dados: Name GetCoordinates not found
+2025-02-24 15:17:58,847 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:31:34,743 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:31:34,743 - INFO - Selecione os COGO POINTS do levantamento de campo
+2025-02-24 15:31:34,754 - ERROR - Erro na extração de dados: Dispatch.__getattr__.<locals>.caller() got an unexpected keyword argument 'Filter'
+2025-02-24 15:31:34,754 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:35:56,993 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:35:56,993 - INFO - Selecione os COGO POINTS do levantamento de campo
+2025-02-24 15:35:57,004 - ERROR - Erro na extração de dados: (-2147352567, 'Exceção.', ('The named selection set exists', 'Autodesk Civil 3D 2024', 'C:\\Program Files\\Autodesk\\AutoCAD 2024\\HELP\\OLE_ERR.CHM', -2145320851, None))
+2025-02-24 15:35:57,004 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:37:45,327 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:37:45,328 - INFO - Selecione os COGO POINTS do levantamento de campo
+2025-02-24 15:37:45,339 - ERROR - Erro na extração de dados: Dispatch.__getattr__.<locals>.caller() got an unexpected keyword argument 'Filter'
+2025-02-24 15:37:45,339 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:40:14,115 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:40:14,115 - INFO - Selecione os COGO POINTS do levantamento de campo
+2025-02-24 15:40:14,125 - ERROR - Erro na extração de dados: (-2147352567, 'Exceção.', ('The named selection set exists', 'Autodesk Civil 3D 2024', 'C:\\Program Files\\Autodesk\\AutoCAD 2024\\HELP\\OLE_ERR.CHM', -2145320851, None))
+2025-02-24 15:40:14,125 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:40:22,998 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:40:22,998 - INFO - Selecione os COGO POINTS do levantamento de campo
+2025-02-24 15:40:23,008 - ERROR - Erro na extração de dados: (-2147352567, 'Exceção.', ('The named selection set exists', 'Autodesk Civil 3D 2024', 'C:\\Program Files\\Autodesk\\AutoCAD 2024\\HELP\\OLE_ERR.CHM', -2145320851, None))
+2025-02-24 15:40:23,008 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:46:42,572 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:46:42,572 - INFO - Selecione manualmente os COGO POINTS do levantamento
+2025-02-24 15:46:50,507 - INFO - Agora selecione POLILINHAS e TEXTOS de referência
+2025-02-24 15:46:50,543 - INFO - Selecione manualmente polilinhas e textos de referência
+2025-02-24 15:47:00,323 - ERROR - Erro na extração de dados: Name GetCoordinates not found
+2025-02-24 15:47:00,323 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:47:41,239 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:47:41,239 - INFO - Selecione manualmente os COGO POINTS do levantamento
+2025-02-24 15:47:52,165 - INFO - Agora selecione POLILINHAS e TEXTOS de referência
+2025-02-24 15:47:52,190 - INFO - Selecione manualmente polilinhas e textos de referência
+2025-02-24 15:47:59,638 - ERROR - Erro na extração de dados: (-2147418111, 'A chamada foi rejeitada pelo chamado.', (None, None, None, 0, None))
+2025-02-24 15:47:59,639 - ERROR - Erro no processo principal: Nenhum COGO point selecionado
+2025-02-24 15:47:59,648 - ERROR - Erro ao limpar conjuntos de seleção: (-2147418111, 'A chamada foi rejeitada pelo chamado.', (None, None, None, 0, None))
+2025-02-24 15:48:13,371 - INFO - Conexão com AutoCAD estabelecida.
+2025-02-24 15:48:13,371 - INFO - Selecione manualmente os COGO POINTS do levantamento
+2025-02-24 15:48:21,327 - INFO - Agora selecione POLILINHAS e TEXTOS de referência
+2025-02-24 15:48:21,373 - INFO - Selecione manualmente polilinhas e textos de referência
+2025-02-24 15:48:25,850 - ERROR - Erro no processo principal: Mínimo de 2 pontos requeridos para transformação
